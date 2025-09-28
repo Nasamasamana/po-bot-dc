@@ -35,7 +35,7 @@ module.exports = {
       .setLabel('Embed Description')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(false)
-      .setMaxLength(4096);
+      .setMaxLength(4000);
 
     const color = new TextInputBuilder()
       .setCustomId('color')

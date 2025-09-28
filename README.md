@@ -1,29 +1,32 @@
-# po-bot-dc
+# po-bot-dc (Node.js Edition)
 
-Java Discord bot starter for Render.com deployment with support for both prefix (p!) and slash (/) commands, modular command structure, and announcement embeds with temporary per-user storage.
+A modular Discord bot for Render.com deployment supporting both prefix ("p!") and slash ("/") commands. Includes an HTTP keep-alive endpoint for 24/7 uptime with UptimeRobot.
 
 ## Features
-- Both slash and prefix commands ("p!" and "/")
-- Modular command folder for easy extension
-- Announcement embed system with preview/edit/upload and per-user temporary storage (admin only)
-- Permissions checks for all commands
-- Render.com deploy ready (Procfile, Maven, no local setup required)
-- 24/7 uptime with HTTP endpoint for UptimeRobot.com
 
-## Quick Start
-1. Connect this repo to Render.com as a new Web Service.
-2. Set environment variable `DISCORD_TOKEN` with your bot token.
-3. Build command: `mvn clean package`
-4. Start command: `java -jar target/po-bot-dc-1.0-SNAPSHOT-jar-with-dependencies.jar`
-5. Set up UptimeRobot to ping `https://<your-render-url>/` every 5 minutes for 24/7 uptime.
+- Slash and prefix commands (p! and /)
+- Modular command folder
+- Announcement embed preview/upload for admins
+- Permissions checks for all commands
+- Render.com deploy ready
+- HTTP keep-alive endpoint for UptimeRobot
+
+## How to Deploy
+
+1. Fork or clone this repo.
+2. On Render.com, create a **Web Service** from this repo.
+3. Add environment variable: `DISCORD_TOKEN` (your bot token).
+4. Set build command: *(leave blank for Node.js)*
+5. Set start command: `node index.js`
+6. Set up UptimeRobot to ping: `https://<your-render-url>/` every 5 minutes.
 
 ## Commands
-- `/say` or `p!say` — Send a message to a mentioned channel (admin only)
-- `/lock` or `p!lock` — Lock a channel (manage channel perm required)
-- `/unlock` or `p!unlock` — Unlock a channel (manage channel perm required)
-- `/purgeuser` or `p!purgeuser` — Delete all messages from a user (manage messages perm required)
-- `/createannounce`, `/previewannounce`, `/uploadannounce` — Create and manage custom embed announcements (admin only, with preview, edit, confirm, upload, temp storage)
-- `/help` — Show all commands in paged embed
+
+- `/say` or `p!say` — Send a message to a channel (admin only)
+- `/lock` or `p!lock` — Lock a channel (manage channels required)
+- `/unlock` or `p!unlock` — Unlock a channel (manage channels required)
+- `/purgeuser` or `p!purgeuser` — Delete recent messages from a user (manage messages required)
+- `/createannounce`, `/previewannounce`, `/uploadannounce` — Create/preview/publish announcement (admin only)
+- `/help` — Show all commands
 
 ---
-See the code in the `src/main/java/bot/` and `src/main/java/bot/commands/` directories for implementation details.

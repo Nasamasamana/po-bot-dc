@@ -1,15 +1,14 @@
 {
-  "name": "pookie-bot",
+  "name": "po-bot-dc",
   "version": "1.0.0",
-  "description": "Minimal Discord bot",
+  "description": "A modular Discord bot with slash and prefix commands, ready for Render.com deployment.",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "deploy": "node deploy-commands.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.13.0",
+    "express": "^4.18.2",
     "dotenv": "^16.3.1"
   }
 }

@@ -35,7 +35,7 @@ module.exports = {
       .setLabel('Embed Description')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(false)
-      .setMaxLength(4000);
+      .setMaxLength(4000); // Discord modal limit is 4000
 
     const color = new TextInputBuilder()
       .setCustomId('color')

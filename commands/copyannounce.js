@@ -1,71 +1,69 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { MessageAttachment } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('copyannounce')
-        .setDescription('Copy an embed from a message and post it in another channel.')
+        .setDescription('Copy a message (text, embeds, attachments) from any channel by ID and post it in another channel.')
         .addChannelOption(option =>
-            option.setName('channel')
-                .setDescription('The channel to post the embed in')
+            option.setName('source_channel')
+                .setDescription('The channel where the message is located')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('message_id')
-                .setDescription('The ID of the message containing the embed')
+                .setDescription('The ID of the message to copy')
+                .setRequired(true))
+        .addChannelOption(option =>
+            option.setName('target_channel')
+                .setDescription('The channel to post the message in')
                 .setRequired(true)),
     
     async execute(interaction) {
-        const targetChannel = interaction.options.getChannel('channel');
+        const sourceChannel = interaction.options.getChannel('source_channel');
+        const targetChannel = interaction.options.getChannel('target_channel');
         const messageId = interaction.options.getString('message_id');
 
         try {
-            // Fetch the message from the current channel
-            const fetchedMessage = await interaction.channel.messages.fetch(messageId);
+            const fetchedMessage = await sourceChannel.messages.fetch(messageId);
 
-            if (!fetchedMessage.embeds.length) {
-                return interaction.reply({ content: 'This message has no embeds!', ephemeral: true });
-            }
+            const content = fetchedMessage.content || null;
+            const embeds = fetchedMessage.embeds || [];
+            const attachments = fetchedMessage.attachments.map(att => att.url) || [];
+            const files = attachments.map(url => new MessageAttachment(url));
 
-            // Repost each embed in the target channel
-            for (const embed of fetchedMessage.embeds) {
-                await targetChannel.send({ embeds: [embed] });
-            }
-
-            await interaction.reply({ content: `Embed copied to ${targetChannel}!`, ephemeral: true });
+            await targetChannel.send({ content, embeds, files });
+            await interaction.reply({ content: `Message copied from ${sourceChannel} to ${targetChannel}!`, ephemeral: true });
 
         } catch (error) {
             console.error(error);
-            interaction.reply({ content: 'Failed to fetch or send the message. Make sure the ID is correct.', ephemeral: true });
+            interaction.reply({ content: 'Failed to fetch or send the message. Make sure the channel and ID are correct.', ephemeral: true });
         }
     },
 
     // Prefix command
     async prefixExecute(message, args) {
-        if (args.length < 2) {
-            return message.channel.send('Usage: p!copyannounce #channel <message_id>');
-        }
+        if (args.length < 3) return message.channel.send('Usage: p!copyannounce #source_channel <message_id> #target_channel');
 
-        const targetChannel = message.mentions.channels.first();
+        const sourceChannel = message.mentions.channels.first();
         const messageId = args[1];
+        const targetChannel = message.mentions.channels.last();
 
-        if (!targetChannel) return message.channel.send('Please mention a valid channel.');
+        if (!sourceChannel || !targetChannel) return message.channel.send('Please mention valid source and target channels.');
 
         try {
-            const fetchedMessage = await message.channel.messages.fetch(messageId);
+            const fetchedMessage = await sourceChannel.messages.fetch(messageId);
 
-            if (!fetchedMessage.embeds.length) {
-                return message.channel.send('This message has no embeds!');
-            }
+            const content = fetchedMessage.content || null;
+            const embeds = fetchedMessage.embeds || [];
+            const attachments = fetchedMessage.attachments.map(att => att.url) || [];
+            const files = attachments.map(url => new MessageAttachment(url));
 
-            for (const embed of fetchedMessage.embeds) {
-                await targetChannel.send({ embeds: [embed] });
-            }
-
-            message.channel.send(`Embed copied to ${targetChannel}!`);
+            await targetChannel.send({ content, embeds, files });
+            message.channel.send(`Message copied from ${sourceChannel} to ${targetChannel}!`);
 
         } catch (error) {
             console.error(error);
-            message.channel.send('Failed to fetch or send the message. Make sure the ID is correct.');
+            message.channel.send('Failed to fetch or send the message. Make sure the channel and ID are correct.');
         }
     }
 };

@@ -1,11 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageAttachment, PermissionsBitField, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
+const { PermissionsBitField, MessageAttachment, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('copyannounce')
-        .setDescription('Copy a message with embeds and attachments.') // ✅ short enough
+        .setDescription('Copy message with embeds and attachments.') // <= 100 chars
         .addChannelOption(option =>
             option.setName('target_channel')
                 .setDescription('The channel to send the message in')
@@ -16,8 +15,9 @@ module.exports = {
                 .setRequired(true)),
 
     async execute(interaction) {
+        // Check admin
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return interaction.reply({ content: 'You need Administrator permission to use this command.', ephemeral: true });
+            return interaction.reply({ content: 'You need Administrator permission.', ephemeral: true });
         }
 
         const targetChannel = interaction.options.getChannel('target_channel');
@@ -30,25 +30,9 @@ module.exports = {
             const embeds = fetchedMessage.embeds.map(e => EmbedBuilder.from(e)) || [];
             const files = [];
 
+            // Use the 'attachment' property from Discord instead of URL
             for (const att of fetchedMessage.attachments.values()) {
-                files.push(new MessageAttachment(att.url, att.name));
-            }
-
-            // Handle external media links in content
-            const urlRegex = /(https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|mp4|mov))/gi;
-            const urls = content ? content.match(urlRegex) : [];
-            if (urls) {
-                for (const url of urls) {
-                    try {
-                        const response = await axios.get(url, { responseType: 'arraybuffer' });
-                        const buffer = Buffer.from(response.data, 'binary');
-                        const name = url.split('/').pop().split('?')[0];
-                        files.push(new MessageAttachment(buffer, name));
-                    } catch {
-                        const embed = new EmbedBuilder().setImage(url);
-                        embeds.push(embed);
-                    }
-                }
+                files.push(new MessageAttachment(att.attachment, att.name));
             }
 
             await targetChannel.send({ content, embeds, files });
@@ -56,7 +40,7 @@ module.exports = {
 
         } catch (error) {
             console.error(error);
-            interaction.reply({ content: 'Failed to fetch or send the message. Make sure the ID is correct and the bot has permission.', ephemeral: true });
+            interaction.reply({ content: 'Failed to copy message. Make sure the ID is correct and the bot has permissions.', ephemeral: true });
         }
     }
 };

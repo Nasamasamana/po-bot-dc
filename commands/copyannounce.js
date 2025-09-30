@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { PermissionsBitField, MessageAttachment, EmbedBuilder } = require('discord.js');
+const { PermissionsBitField, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const axios = require('axios');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,9 +31,25 @@ module.exports = {
             const embeds = fetchedMessage.embeds.map(e => EmbedBuilder.from(e)) || [];
             const files = [];
 
-            // Use the 'attachment' property from Discord instead of URL
+            // Attach Discord-uploaded files
             for (const att of fetchedMessage.attachments.values()) {
-                files.push(new MessageAttachment(att.attachment, att.name));
+                files.push(new AttachmentBuilder(att.url).setName(att.name));
+            }
+
+            // Handle external media links in content (optional)
+            const urlRegex = /(https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|mp4|mov))/gi;
+            const urls = content ? content.match(urlRegex) : [];
+            if (urls) {
+                for (const url of urls) {
+                    try {
+                        const response = await axios.get(url, { responseType: 'arraybuffer' });
+                        const buffer = Buffer.from(response.data, 'binary');
+                        const name = url.split('/').pop().split('?')[0];
+                        files.push(new AttachmentBuilder(buffer, { name }));
+                    } catch {
+                        embeds.push(new EmbedBuilder().setImage(url));
+                    }
+                }
             }
 
             await targetChannel.send({ content, embeds, files });
@@ -40,7 +57,9 @@ module.exports = {
 
         } catch (error) {
             console.error(error);
-            interaction.reply({ content: 'Failed to copy message. Make sure the ID is correct and the bot has permissions.', ephemeral: true });
+            if (!interaction.replied) {
+                interaction.reply({ content: 'Failed to copy message. Make sure the ID is correct and the bot has permission.', ephemeral: true });
+            }
         }
     }
 };

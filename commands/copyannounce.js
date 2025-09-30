@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageAttachment, PermissionsBitField } = require('discord.js');
+const axios = require('axios'); // we'll fetch attachments as buffer
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,10 +28,16 @@ module.exports = {
             // Fetch message from current channel
             const fetchedMessage = await interaction.channel.messages.fetch(messageId);
 
-            // Gather content, embeds, and attachments
             const content = fetchedMessage.content || null;
             const embeds = fetchedMessage.embeds || [];
-            const files = fetchedMessage.attachments.map(att => new MessageAttachment(att.url, att.name));
+            const files = [];
+
+            // Fetch each attachment as a buffer
+            for (const att of fetchedMessage.attachments.values()) {
+                const response = await axios.get(att.url, { responseType: 'arraybuffer' });
+                const buffer = Buffer.from(response.data, 'binary');
+                files.push(new MessageAttachment(buffer, att.name));
+            }
 
             await targetChannel.send({ content, embeds, files });
             await interaction.reply({ content: `Message copied to ${targetChannel}!`, ephemeral: true });

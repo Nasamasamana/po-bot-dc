@@ -1,4 +1,10 @@
-const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  PermissionsBitField,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -48,7 +54,11 @@ module.exports = {
         let totalDeleted = 0;
 
         for (const [id, channel] of interaction.guild.channels.cache) {
-          if (!channel.isTextBased() || !channel.viewable || !channel.permissionsFor(interaction.guild.members.me).has(PermissionsBitField.Flags.ManageMessages)) {
+          if (
+            !channel.isTextBased() ||
+            !channel.viewable ||
+            !channel.permissionsFor(interaction.guild.members.me).has(PermissionsBitField.Flags.ManageMessages)
+          ) {
             continue;
           }
 
@@ -64,7 +74,10 @@ module.exports = {
           }
         }
 
-        return i.update({ content: `🧹 Deleted ${totalDeleted} messages from ${user.tag} across all channels.`, components: [] });
+        return i.update({
+          content: `🧹 Deleted ${totalDeleted} messages from ${user.tag} across all channels.`,
+          components: []
+        });
       }
     });
 
@@ -84,7 +97,9 @@ module.exports = {
     const user = message.mentions.users.first();
     if (!user) return message.reply('👉 Please mention a user to purge.\nExample: `p!purgeuser @User`');
 
-    message.reply(`⚠️ Are you sure you want to purge messages from ${user.tag} across all channels? Reply with "yes" within 15s to confirm.`);
+    message.reply(
+      `⚠️ Are you sure you want to purge messages from ${user.tag} across all channels? Reply with "yes" within 15s to confirm.`
+    );
 
     // Await confirmation
     const filter = m => m.author.id === message.author.id && m.content.toLowerCase() === 'yes';
@@ -97,4 +112,26 @@ module.exports = {
     let totalDeleted = 0;
 
     for (const [id, channel] of message.guild.channels.cache) {
-      if (!channel.isTextBased() || !channel.viewable || !channel.permissionsFor(message.guild.members.me).has(Permiss
+      if (
+        !channel.isTextBased() ||
+        !channel.viewable ||
+        !channel.permissionsFor(message.guild.members.me).has(PermissionsBitField.Flags.ManageMessages)
+      ) {
+        continue;
+      }
+
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 });
+        const filtered = messages.filter(m => m.author.id === user.id);
+        if (filtered.size > 0) {
+          const deleted = await channel.bulkDelete(filtered, true);
+          totalDeleted += deleted.size;
+        }
+      } catch (err) {
+        console.error(`Failed to purge in ${channel.name}:`, err.message);
+      }
+    }
+
+    return message.reply(`🧹 Deleted ${totalDeleted} messages from ${user.tag} across all channels.`);
+  }
+};

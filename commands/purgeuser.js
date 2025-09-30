@@ -36,7 +36,7 @@ module.exports = {
     await message.channel.bulkDelete(filtered, true);
     message.reply(`Purged recent messages from ${user}.`);
   }
-}; content: 'You need Manage Messages permission.', ephemeral: true });
+return interaction.reply({ content: 'You need Manage Messages permission.', ephemeral: true });
     }
     const user = interaction.options.getUser('user');
     const channel = interaction.channel;

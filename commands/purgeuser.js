@@ -7,7 +7,7 @@ module.exports = {
     .addUserOption(opt => opt.setName('user').setDescription('User to purge').setRequired(true)),
   async execute(interaction, client) {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-      return interaction.reply({const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+      return interaction.reply({ content: 'You don’t have permission to use this command.', ephemeral: true });
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -1,11 +1,11 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageAttachment, PermissionsBitField } = require('discord.js');
-const axios = require('axios'); // we'll fetch attachments as buffer
+const { MessageAttachment, PermissionsBitField, EmbedBuilder } = require('discord.js');
+const axios = require('axios');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('copyannounce')
-        .setDescription('Copy a message (text, embeds, attachments) from this channel and post it in another channel.')
+        .setDescription('Copy a message (text, embeds, attachments, external media) from this channel and post it in another channel.')
         .addChannelOption(option =>
             option.setName('target_channel')
                 .setDescription('The channel to post the message in')
@@ -16,7 +16,7 @@ module.exports = {
                 .setRequired(true)),
 
     async execute(interaction) {
-        // Check for Administrator permission
+        // Check Administrator permission
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return interaction.reply({ content: 'You need Administrator permission to use this command.', ephemeral: true });
         }
@@ -25,18 +25,34 @@ module.exports = {
         const messageId = interaction.options.getString('message_id');
 
         try {
-            // Fetch message from current channel
             const fetchedMessage = await interaction.channel.messages.fetch(messageId);
 
             const content = fetchedMessage.content || null;
-            const embeds = fetchedMessage.embeds || [];
+            const embeds = fetchedMessage.embeds.map(e => EmbedBuilder.from(e)) || [];
             const files = [];
 
-            // Fetch each attachment as a buffer
+            // Attach Discord-uploaded files
             for (const att of fetchedMessage.attachments.values()) {
-                const response = await axios.get(att.url, { responseType: 'arraybuffer' });
-                const buffer = Buffer.from(response.data, 'binary');
-                files.push(new MessageAttachment(buffer, att.name));
+                files.push(new MessageAttachment(att.url, att.name));
+            }
+
+            // Detect external media links in message content (simple regex for images)
+            const urlRegex = /(https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|mp4|mov))/gi;
+            const urls = content ? content.match(urlRegex) : [];
+            if (urls) {
+                for (const url of urls) {
+                    // Add external media as attachment if possible
+                    try {
+                        const response = await axios.get(url, { responseType: 'arraybuffer' });
+                        const buffer = Buffer.from(response.data, 'binary');
+                        const name = url.split('/').pop().split('?')[0];
+                        files.push(new MessageAttachment(buffer, name));
+                    } catch {
+                        // If fetching fails, add as embed image instead
+                        const embed = new EmbedBuilder().setImage(url);
+                        embeds.push(embed);
+                    }
+                }
             }
 
             await targetChannel.send({ content, embeds, files });
@@ -44,7 +60,7 @@ module.exports = {
 
         } catch (error) {
             console.error(error);
-            interaction.reply({ content: 'Failed to fetch or send the message. Make sure the ID is correct and the bot has permission to send messages.', ephemeral: true });
+            interaction.reply({ content: 'Failed to fetch or send the message. Make sure the ID is correct and the bot has permission.', ephemeral: true });
         }
     }
 };

@@ -3,28 +3,54 @@ const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('say')
-    .setDescription('Send a message to a channel (admin only)')
-    .addChannelOption(opt => opt.setName('channel').setDescription('Channel to send to').setRequired(true))
-    .addStringOption(opt => opt.setName('message').setDescription('Message').setRequired(true)),
-  async execute(interaction, client) {
+    .setDescription('Send a custom message to a chosen channel')
+    .addChannelOption(opt =>
+      opt.setName('channel')
+        .setDescription('Channel where to send the message')
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName('message')
+        .setDescription('The message to send')
+        .setRequired(true)
+    ),
+
+  // Slash command version
+  async execute(interaction) {
+    // optional: remove this if you don’t want admin-only restriction
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.reply({ content: 'You need Administrator permission.', ephemeral: true });
+      return interaction.reply({ content: 'You need Administrator permission to use this command.', ephemeral: true });
     }
+
     const channel = interaction.options.getChannel('channel');
     const message = interaction.options.getString('message');
-    if (!channel.isTextBased()) return interaction.reply({ content: 'Must be a text channel.', ephemeral: true });
-    channel.send(message);
-    interaction.reply({ content: 'Message sent!', ephemeral: true });
-  },
-  async executePrefix(message, args, client) {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return message.reply('You need Administrator permission.');
+
+    if (!channel.isTextBased()) {
+      return interaction.reply({ content: 'That must be a text-based channel.', ephemeral: true });
     }
-    const channelMention = args.shift();
-    const msg = args.join(' ');
+
+    await channel.send(message);
+    return interaction.reply({ content: `✅ Message sent to ${channel}`, ephemeral: true });
+  },
+
+  // Prefix command version
+  async executePrefix(message, args) {
+    // optional: remove this if you don’t want admin-only restriction
+    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return message.reply('You need Administrator permission to use this command.');
+    }
+
     const channel = message.mentions.channels.first();
-    if (!channel) return message.reply('Mention a channel.');
-    channel.send(msg);
-    message.react('✅');
+    if (!channel) {
+      return message.reply('Please mention a channel first.\nExample: `p!say #general Hello world!`');
+    }
+
+    const msg = args.slice(1).join(' ');
+    if (!msg) {
+      return message.reply('Please provide a message to send.');
+    }
+
+    await channel.send(msg);
+    return message.react('✅');
   }
 };

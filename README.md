@@ -8,8 +8,8 @@ A modular Discord bot for Render.com deployment supporting both prefix ("p!") an
 - Modular command folder
 - Announcement embed preview/upload for admins
 - Permissions checks for all commands
-- Render.com deploy ready
-- HTTP keep-alive endpoint for UptimeRobot
+- easy deploy ready
+- HTTP keep-alive endpoint for 24/7
 
 ## How to Deploy
 its a secret.

@@ -12,13 +12,7 @@ A modular Discord bot for Render.com deployment supporting both prefix ("p!") an
 - HTTP keep-alive endpoint for UptimeRobot
 
 ## How to Deploy
-
-1. Fork or clone this repo.
-2. On Render.com, create a **Web Service** from this repo.
-3. Add environment variable: `DISCORD_TOKEN` (your bot token).
-4. Set build command: *(leave blank for Node.js)*
-5. Set start command: `node index.js`
-6. Set up UptimeRobot to ping: `https://<your-render-url>/` every 5 minutes.
+its a secret.
 
 ## Commands
 

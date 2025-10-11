@@ -21,7 +21,7 @@ module.exports = {
   // Slash command version
   async execute(interaction) {
     if (interaction.user.id !== OWNER_ID) {
-      return interaction.reply({ content: 'Only the bot owner can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Sorry, but only my master can use this command.', ephemeral: true });
     }
 
     const channel = interaction.options.getChannel('channel');
@@ -32,23 +32,23 @@ module.exports = {
     }
 
     await channel.send(message);
-    return interaction.reply({ content: `✅ Message sent to ${channel}`, ephemeral: true });
+    return interaction.reply({ content: `✅ Message has been sent to ${channel} master`, ephemeral: true });
   },
 
   // Prefix command version
   async executePrefix(message, args) {
     if (message.author.id !== OWNER_ID) {
-      return message.reply('Only the bot owner can use this command.');
+      return message.reply('Sorry, but only my master can use this command.');
     }
 
     const channel = message.mentions.channels.first();
     if (!channel) {
-      return message.reply('Please mention a channel first.\nExample: `p!say #general Hello world!`');
+      return message.reply('Master can you please mention a channel first.\nExample: `p!say #general Hello world!`');
     }
 
     const msg = args.slice(1).join(' ');
     if (!msg) {
-      return message.reply('Please provide a message to send.');
+      return message.reply('Master can you please provide a message to send.');
     }
 
     await channel.send(msg);

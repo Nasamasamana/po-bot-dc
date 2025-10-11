@@ -1,5 +1,8 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 
+// Replace with your Discord ID
+const OWNER_ID = '1238139423678402600';
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('say')
@@ -17,9 +20,8 @@ module.exports = {
 
   // Slash command version
   async execute(interaction) {
-    // optional: remove this if you don’t want admin-only restriction
-    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.reply({ content: 'You need Administrator permission to use this command.', ephemeral: true });
+    if (interaction.user.id !== OWNER_ID) {
+      return interaction.reply({ content: 'Only the bot owner can use this command.', ephemeral: true });
     }
 
     const channel = interaction.options.getChannel('channel');
@@ -35,9 +37,8 @@ module.exports = {
 
   // Prefix command version
   async executePrefix(message, args) {
-    // optional: remove this if you don’t want admin-only restriction
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return message.reply('You need Administrator permission to use this command.');
+    if (message.author.id !== OWNER_ID) {
+      return message.reply('Only the bot owner can use this command.');
     }
 
     const channel = message.mentions.channels.first();
